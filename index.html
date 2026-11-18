@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Student Management System</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f3f5fa;color:#202b3c}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:230px;background:#14233f;color:white;padding:25px 15px;flex-shrink:0}
+.brand{font-size:19px;font-weight:bold;padding:10px;margin-bottom:30px}
+.brand span{color:#60a5fa}
+.nav button{display:block;width:100%;text-align:left;background:transparent;color:#cbd5e1;border:0;padding:14px;margin:5px 0;border-radius:8px;cursor:pointer;font-size:14px}
+.nav button.active,.nav button:hover{background:#29466f;color:white}
+.main{flex:1;padding:28px;min-width:0}
+.header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:25px;flex-wrap:wrap}
+.header h1{font-size:25px;color:#172b4d}
+.header p{color:#718096;font-size:13px;margin-top:6px}
+.btn{border:0;padding:11px 16px;border-radius:7px;cursor:pointer;font-weight:bold}
+.primary{background:#2563eb;color:white}
+.secondary{background:#e5eaf3;color:#26364d}
+.danger{background:#fee2e2;color:#b91c1c}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:22px}
+.card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 10px #172b4d0c}
+.card p{font-size:13px;color:#758198}
+.card h2{font-size:27px;margin-top:12px;color:#1d355b}
+.panel{background:white;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 10px #172b4d0c}
+.panel h2{font-size:18px;margin-bottom:17px}
+.grid-two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{padding:12px 10px;text-align:left;border-bottom:1px solid #e9edf3;font-size:13px}
+th{background:#f5f7fb;color:#53627a}
+.table-wrap{overflow-x:auto}
+.tag{padding:5px 9px;border-radius:20px;font-size:11px;font-weight:bold;display:inline-block}
+.good{background:#dcfce7;color:#15803d}
+.bad{background:#fee2e2;color:#b91c1c}
+.warn{background:#fef3c7;color:#a16207}
+.search{padding:11px;border:1px solid #d5dce8;border-radius:7px;width:100%;margin-bottom:15px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.small{padding:6px 9px;font-size:12px}
+.page{display:none}
+.page.active{display:block}
+.bar-row{display:flex;align-items:center;gap:10px;margin:12px 0;font-size:13px}
+.bar-label{width:35px}
+.bar-bg{height:12px;background:#edf0f5;border-radius:10px;flex:1;overflow:hidden}
+.bar-fill{height:100%;background:#3b82f6;border-radius:10px}
+.top-item{padding:12px 0;border-bottom:1px solid #edf0f5;display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.empty{text-align:center;color:#8490a4;padding:30px}
+.modal{display:none;position:fixed;inset:0;background:#101b30a8;z-index:5;align-items:center;justify-content:center;padding:15px}
+.modal.show{display:flex}
+.modal-box{background:white;padding:25px;border-radius:13px;width:100%;max-width:550px;max-height:90vh;overflow:auto}
+.modal-box h2{margin-bottom:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.field label{display:block;font-size:12px;font-weight:bold;margin-bottom:7px}
+.field input{width:100%;padding:11px;border:1px solid #d5dce8;border-radius:6px}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.modal-actions button{flex:1}
+.message{color:#64748b;font-size:12px;margin-top:10px}
+footer{text-align:center;color:#8a94a5;padding:20px;font-size:12px}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){
+.layout{display:block}
+.sidebar{width:100%;padding:12px}
+.brand{margin-bottom:8px}
+.nav{display:flex;overflow-x:auto}
+.nav button{white-space:nowrap;width:auto}
+.main{padding:15px}
+.grid-two{grid-template-columns:1fr}
+.header h1{font-size:20px}
+}
+@media(max-width:400px){.cards{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+    <div class="brand">SMART <span>STUDENT</span></div>
+    <div class="nav">
+        <button class="active" onclick="showPage('dashboard',this)">▦ Dashboard</button>
+        <button onclick="showPage('students',this)">♙ Students</button>
+        <button onclick="showPage('warning',this)">⚠ Early Warning</button>
+    </div>
+</aside>
+
+<main class="main">
+
+<div class="header">
+    <div>
+        <h1 id="pageTitle">Dashboard</h1>
+        <p>Student Performance Analytics and Management</p>
+    </div>
+    <button class="btn primary" onclick="openForm()">+ Add Student</button>
+</div>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="page active">
+
+<div class="cards">
+    <div class="card"><p>Total Students</p><h2 id="total">0</h2></div>
+    <div class="card"><p>Class Average</p><h2 id="average">0</h2></div>
+    <div class="card"><p>At-Risk Students</p><h2 id="atRisk">0</h2></div>
+    <div class="card"><p>Attendance Alerts</p><h2 id="alerts">0</h2></div>
+</div>
+
+<div class="grid-two">
+    <div class="panel">
+        <h2>Grade Distribution</h2>
+        <div id="gradeChart"></div>
+    </div>
+    <div class="panel">
+        <h2>Top 5 Performers</h2>
+        <div id="topStudents"></div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Recent Student Records</h2>
+    <div class="table-wrap">
+        <table>
+            <thead><tr>
+                <th>ID</th><th>Name</th><th>Course</th>
+                <th>Average</th><th>Grade</th><th>Status</th>
+            </tr></thead>
+            <tbody id="dashboardTable"></tbody>
+        </table>
+    </div>
+</div>
+</section>
+
+<!-- STUDENTS -->
+<section id="students" class="page">
+<div class="panel">
+    <h2>Student Records</h2>
+    <input class="search" id="searchBox"
+      placeholder='Search: name, CSE below 50, attendance below 75, top 3, risk'
+      oninput="renderStudents()">
+    <div class="actions" style="margin-bottom:15px">
+        <button class="btn primary" onclick="openForm()">+ Add Student</button>
+        <button class="btn secondary" onclick="exportCSV()">Export CSV</button>
+        <button class="btn secondary" onclick="resetDemo()">Load Demo Data</button>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr>
+                <th>ID</th><th>Name</th><th>Course</th>
+                <th>Attendance</th><th>Test 1</th><th>Test 2</th>
+                <th>Test 3</th><th>Average</th><th>Grade</th>
+                <th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="studentTable"></tbody>
+        </table>
+    </div>
+    <p class="message">Data is automatically saved in this browser.</p>
+</div>
+</section>
+
+<!-- EARLY WARNING -->
+<section id="warning" class="page">
+<div class="panel">
+    <h2>Students Requiring Attention</h2>
+    <p class="message" style="margin-bottom:15px">
+    Students are listed when one or more risk conditions are detected.
+    </p>
+    <div class="table-wrap">
+        <table>
+            <thead><tr>
+                <th>ID</th><th>Name</th><th>Average</th>
+                <th>Attendance</th><th>Predicted Next Test</th><th>Risk Reasons</th>
+            </tr></thead>
+            <tbody id="warningTable"></tbody>
+        </table>
+    </div>
+</div>
+</section>
+
+<footer>Smart Student Management System | Java Mini Project – Web Demonstration</footer>
+</main>
+</div>
+
+<!-- ADD / EDIT FORM -->
+<div class="modal" id="studentModal">
+<div class="modal-box">
+    <h2 id="formTitle">Add Student</h2>
+    <form id="studentForm">
+        <div class="form-grid">
+            <div class="field">
+                <label>Student ID</label>
+                <input id="sid" type="number" min="1" required>
+            </div>
+            <div class="field">
+                <label>Student Name</label>
+                <input id="sname" required>
+            </div>
+            <div class="field">
+                <label>Course</label>
+                <input id="course" placeholder="CSE" required>
+            </div>
+            <div class="field">
+                <label>Attendance (%)</label>
+                <input id="attendance" type="number" min="0" max="100" required>
+            </div>
+            <div class="field">
+                <label>Test 1 Marks</label>
+                <input id="t1" type="number" min="0" max="100" required>
+            </div>
+            <div class="field">
+                <label>Test 2 Marks</label>
+                <input id="t2" type="number" min="0" max="100" required>
+            </div>
+            <div class="field">
+                <label>Test 3 Marks</label>
+                <input id="t3" type="number" min="0" max="100" required>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn secondary" onclick="closeForm()">Cancel</button>
+            <button type="submit" class="btn primary">Save Student</button>
+        </div>
+    </form>
+</div>
+</div>
+
+<script>
+// ------------------------------------
+// SMART STUDENT MANAGEMENT SYSTEM
+// ------------------------------------
+
+const STORAGE_KEY = "smartStudentRecords";
+let students = [];
+let editingId = null;
+
+const demoData = [
+ {id:101,name:"Priya Nair",course:"CSE",attendance:68,t1:65,t2:50,t3:42},
+ {id:102,name:"Arjun Mehta",course:"CSE",attendance:80,t1:70,t2:75,t3:78},
+ {id:103,name:"Divya Lakshmi",course:"AIML",attendance:95,t1:92,t2:94,t3:96},
+ {id:104,name:"Karthik S",course:"CSE",attendance:85,t1:50,t2:42,t3:35},
+ {id:105,name:"Asha Raman",course:"IT",attendance:90,t1:85,t2:88,t3:90},
+ {id:106,name:"Suresh Babu",course:"CSE",attendance:80,t1:55,t2:48,t3:42},
+ {id:107,name:"Meena Iyer",course:"AIML",attendance:88,t1:75,t2:68,t3:58},
+ {id:108,name:"Ravi Kumar",course:"IT",attendance:92,t1:60,t2:65,t3:70}
+];
+
+// Load saved records or create demonstration records.
+function loadData(){
+    try{
+        const saved = localStorage.getItem(STORAGE_KEY);
+        students = saved === null ? demoData.map(s=>({...s})) : JSON.parse(saved);
+        if(!Array.isArray(students)) students=[];
+    }catch(e){
+        students = demoData.map(s=>({...s}));
+    }
+    saveData();
+}
+
+function saveData(){
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(students));
+}
+
+// Average mark
+function avg(s){
+    return (s.t1+s.t2+s.t3)/3;
+}
+
+// Grade calculation
+function grade(s){
+    let m=avg(s);
+    if(m>=90)return "A+";
+    if(m>=80)return "A";
+    if(m>=70)return "B";
+    if(m>=60)return "C";
+    if(m>=50)return "D";
+    return "F";
+}
+
+// Score trend and next-test prediction
+function predicted(s){
+    let average=avg(s);
+    let slope=(s.t3-s.t1)/2;
+    return Math.max(0,Math.min(100,average+2*slope));
+}
+
+// Risk detection
+function reasons(s){
+    let r=[];
+    if(avg(s)<50)r.push("Low average");
+    if(s.attendance<75)r.push("Attendance shortage");
+    let slope=(s.t3-s.t1)/2;
+    if(slope<=-5)r.push("Declining scores");
+    if(predicted(s)<50 && avg(s)>=50)
+        r.push("Forecast below pass mark");
+    return r;
+}
+
+function atRisk(s){
+    return reasons(s).length>0;
+}
+
+function statusTag(s){
+    return atRisk(s)
+      ? '<span class="tag bad">At Risk</span>'
+      : '<span class="tag good">On Track</span>';
+}
+
+function gradeTag(s){
+    return '<span class="tag '+(grade(s)==="F"?"bad":"good")+'">'+grade(s)+'</span>';
+}
+
+// Page navigation
+function showPage(page,button){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(page).classList.add("active");
+    document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+    if(button)button.classList.add("active");
+
+    const titles={
+        dashboard:"Dashboard",
+        students:"Student Management",
+        warning:"Early Warning System"
+    };
+    document.getElementById("pageTitle").textContent=titles[page];
+    refreshAll();
+}
+
+// Dashboard
+function renderDashboard(){
+    let total=students.length;
+    let classAvg=total?students.reduce((a,s)=>a+avg(s),0)/total:0;
+    let risks=students.filter(atRisk).length;
+    let alerts=students.filter(s=>s.attendance<75).length;
+
+    document.getElementById("total").textContent=total;
+    document.getElementById("average").textContent=classAvg.toFixed(1);
+    document.getElementById("atRisk").textContent=risks;
+    document.getElementById("alerts").textContent=alerts;
+
+    let grades=["A+","A","B","C","D","F"];
+    let chart=document.getElementById("gradeChart");
+    chart.innerHTML="";
+
+    grades.forEach(g=>{
+        let count=students.filter(s=>grade(s)===g).length;
+        let percent=total?count/total*100:0;
+        chart.innerHTML+=`
+        <div class="bar-row">
+          <span class="bar-label">${g}</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:${percent}%"></div></div>
+          <b>${count}</b>
+        </div>`;
+    });
+
+    let top=[...students].sort((a,b)=>avg(b)-avg(a)).slice(0,5);
+    document.getElementById("topStudents").innerHTML=top.length?
+      top.map((s,i)=>`
+       <div class="top-item">
+        <span>${i+1}. ${escapeHTML(s.name)}</span>
+        <b>${avg(s).toFixed(1)} / ${grade(s)}</b>
+       </div>`).join(""):'<div class="empty">No student records</div>';
+
+    document.getElementById("dashboardTable").innerHTML=students.length?
+      students.slice(0,8).map(s=>`
+       <tr>
+        <td>${s.id}</td><td>${escapeHTML(s.name)}</td>
+        <td>${escapeHTML(s.course)}</td>
+        <td>${avg(s).toFixed(1)}</td><td>${gradeTag(s)}</td>
+        <td>${statusTag(s)}</td>
+       </tr>`).join("") :
+       '<tr><td colspan="6" class="empty">No records available</td></tr>';
+}
+
+// Smart search
+function searchStudents(){
+    let q=document.getElementById("searchBox").value.trim().toLowerCase();
+    if(!q)return students;
+
+    let words=q.split(/\s+/);
+    let course=students.find(s=>words.includes(s.course.toLowerCase()))?.course;
+    let below=words.includes("below")||words.includes("under")||words.includes("<");
+    let above=words.includes("above")||words.includes("over")||words.includes(">");
+    let topIndex=words.indexOf("top");
+    let top=topIndex!==-1;
+    let attendance=words.some(w=>w.startsWith("attend"));
+    let risk=words.includes("risk");
+    let number=words.find(w=>/^\d+(\.\d+)?$/.test(w));
+    let structured=course||below||above||top||attendance||risk;
+
+    if(!structured){
+        return students.filter(s=>
+            String(s.id).includes(q)||
+            s.name.toLowerCase().includes(q)||
+            s.course.toLowerCase().includes(q)
+        );
+    }
+
+    let out=students.filter(s=>{
+        if(course && s.course.toLowerCase()!==course.toLowerCase())return false;
+        if(risk&&!atRisk(s))return false;
+
+        if(number&&(below||above)){
+            let value=attendance?s.attendance:avg(s);
+            if(below&&!(value<Number(number)))return false;
+            if(above&&!(value>Number(number)))return false;
+        }
+        return true;
+    });
+
+    if(top){
+        out.sort((a,b)=>avg(b)-avg(a));
+        let n=number?Math.max(1,Number(number)):5;
+        out=out.slice(0,n);
+    }
+    return out;
+}
+
+// Student table
+function renderStudents(){
+    let list=searchStudents();
+    document.getElementById("studentTable").innerHTML=list.length?
+    list.map(s=>`
+      <tr>
+        <td>${s.id}</td>
+        <td>${escapeHTML(s.name)}</td>
+        <td>${escapeHTML(s.course)}</td>
+        <td>${s.attendance}%</td>
+        <td>${s.t1}</td><td>${s.t2}</td><td>${s.t3}</td>
+        <td><b>${avg(s).toFixed(1)}</b></td>
+        <td>${gradeTag(s)}</td>
+        <td>${statusTag(s)}</td>
+        <td><div class="actions">
+          <button class="btn secondary small" onclick="editStudent(${s.id})">Edit</button>
+          <button class="btn danger small" onclick="deleteStudent(${s.id})">Delete</button>
+        </div></td>
+      </tr>`).join("") :
+      '<tr><td colspan="11" class="empty">No matching student records</td></tr>';
+}
+
+// Early warning
+function renderWarnings(){
+    let list=students.filter(atRisk).sort((a,b)=>
+        reasons(b).length-reasons(a).length || avg(a)-avg(b));
+
+    document.getElementById("warningTable").innerHTML=list.length?
+    list.map(s=>`
+      <tr>
+        <td>${s.id}</td>
+        <td>${escapeHTML(s.name)}</td>
+        <td>${avg(s).toFixed(1)}</td>
+        <td>${s.attendance}%</td>
+        <td><b>${predicted(s).toFixed(1)}</b></td>
+        <td>${reasons(s).map(r=>'<span class="tag warn">'+r+'</span>').join(" ")}</td>
+      </tr>`).join("") :
+      '<tr><td colspan="6" class="empty">No at-risk students found</td></tr>';
+}
+
+function refreshAll(){
+    renderDashboard();
+    renderStudents();
+    renderWarnings();
+}
+
+// Form handling
+function openForm(){
+    editingId=null;
+    document.getElementById("studentForm").reset();
+    document.getElementById("sid").disabled=false;
+    document.getElementById("formTitle").textContent="Add Student";
+    document.getElementById("studentModal").classList.add("show");
+}
+
+function closeForm(){
+    document.getElementById("studentModal").classList.remove("show");
+}
+
+function editStudent(id){
+    let s=students.find(x=>x.id===id);
+    if(!s)return;
+
+    editingId=id;
+    document.getElementById("formTitle").textContent="Edit Student";
+    document.getElementById("sid").value=s.id;
+    document.getElementById("sid").disabled=true;
+    document.getElementById("sname").value=s.name;
+    document.getElementById("course").value=s.course;
+    document.getElementById("attendance").value=s.attendance;
+    document.getElementById("t1").value=s.t1;
+    document.getElementById("t2").value=s.t2;
+    document.getElementById("t3").value=s.t3;
+    document.getElementById("studentModal").classList.add("show");
+}
+
+document.getElementById("studentForm").addEventListener("submit",function(e){
+    e.preventDefault();
+
+    let s={
+        id:Number(document.getElementById("sid").value),
+        name:document.getElementById("sname").value.trim(),
+        course:document.getElementById("course").value.trim(),
+        attendance:Number(document.getElementById("attendance").value),
+        t1:Number(document.getElementById("t1").value),
+        t2:Number(document.getElementById("t2").value),
+        t3:Number(document.getElementById("t3").value)
+    };
+
+    if(!Number.isInteger(s.id)||s.id<=0){
+        alert("Enter a valid positive student ID.");
+        return;
+    }
+
+    if(!s.name||!s.course){
+        alert("Name and course cannot be empty.");
+        return;
+    }
+
+    if([s.attendance,s.t1,s.t2,s.t3].some(n=>!Number.isFinite(n)||n<0||n>100)){
+        alert("Attendance and marks must be between 0 and 100.");
+        return;
+    }
+
+    if(editingId===null&&students.some(x=>x.id===s.id)){
+        alert("A student with this ID already exists.");
+        return;
+    }
+
+    if(editingId!==null){
+        let index=students.findIndex(x=>x.id===editingId);
+        students[index]=s;
+    }else{
+        students.push(s);
+    }
+
+    saveData();
+    closeForm();
+    refreshAll();
+    alert("Student record saved successfully!");
+});
+
+function deleteStudent(id){
+    let s=students.find(x=>x.id===id);
+    if(!s)return;
+    if(confirm("Delete "+s.name+" (ID "+id+")?")){
+        students=students.filter(x=>x.id!==id);
+        saveData();
+        refreshAll();
+    }
+}
+
+// CSV export
+function exportCSV(){
+    let headers=["id","name","course","attendance","test1","test2","test3","average","grade","status","predicted"];
+    let rows=students.map(s=>[
+        s.id,s.name,s.course,s.attendance,s.t1,s.t2,s.t3,
+        avg(s).toFixed(1),grade(s),atRisk(s)?"At Risk":"On Track",
+        predicted(s).toFixed(1)
+    ]);
+
+    let csv=[headers,...rows].map(row=>
+        row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")
+    ).join("\n");
+
+    let blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+    let url=URL.createObjectURL(blob);
+    let a=document.createElement("a");
+    a.href=url;
+    a.download="students.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Demo data reset
+function resetDemo(){
+    if
